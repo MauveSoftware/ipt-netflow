@@ -216,7 +216,7 @@ err:
 # ifdef ktime_to_timeval
 /* ktime_to_timeval is defined on 64bit and inline on 32bit cpu */
 /* when it's defined it calls ns_to_timeval, which is not exported */
-struct timeval portable_ns_to_timeval(const s64 nsec)
+struct __kernel_old_timeval portable_ns_to_timeval(const s64 nsec)
 {
 	struct timespec ts = ns_to_timespec(nsec);
 	struct timeval tv;
@@ -231,7 +231,7 @@ struct timeval portable_ns_to_timeval(const s64 nsec)
 
 static inline s64 portable_ktime_to_ms(const ktime_t kt)
 {
-	struct timeval tv = ktime_to_timeval(kt);
+	struct __kernel_old_timeval tv = ktime_to_timeval(kt);
 	return (s64) tv.tv_sec * MSEC_PER_SEC + tv.tv_usec / USEC_PER_MSEC;
 }
 # define ktime_to_ms portable_ktime_to_ms
@@ -688,7 +688,28 @@ nf_bridge_info_get(const struct sk_buff *skb)
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5,0,0)
-static inline void do_gettimeofday(struct timeval *tv)
+#define USEC_JIFFIE_SC (SEC_JIFFIE_SC + 19)
+#define USEC_ROUND (u64)(((u64)1 << USEC_JIFFIE_SC) - 1)
+#define USEC_CONVERSION  \
+  ((unsigned long)((((u64)NSEC_PER_USEC << USEC_JIFFIE_SC) +\
+  TICK_NSEC -1) / (u64)TICK_NSEC))
+
+static inline long timeval_to_jiffies(const struct __kernel_old_timeval *value)
+{
+    unsigned long sec = value->tv_sec;
+    long usec = value->tv_usec;
+
+    if (sec >= MAX_SEC_IN_JIFFIES){
+        sec = MAX_SEC_IN_JIFFIES;
+        usec = 0;
+    }
+  
+    return (((u64)sec * SEC_CONVERSION) +
+        (((u64)usec * USEC_CONVERSION + USEC_ROUND) >>
+        (USEC_JIFFIE_SC - SEC_JIFFIE_SC))) >> SEC_JIFFIE_SC;
+}
+
+static inline void do_gettimeofday(struct __kernel_old_timeval *tv)
 {
 	struct timespec64 ts64;
 	ktime_get_real_ts64(&ts64);

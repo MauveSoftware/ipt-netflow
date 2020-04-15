@@ -2614,7 +2614,7 @@ static void ipt_netflow_free(struct ipt_netflow *nf)
 /* only called in scan worker path */
 static void netflow_export_pdu_v5(void)
 {
-	struct timeval tv;
+	struct __kernel_old_timeval tv;
 	int pdusize;
 
 	if (!pdu_data_records)
@@ -2698,7 +2698,7 @@ static void netflow_export_flow_v5(struct ipt_netflow *nf)
 /* pdu is initially blank, export current pdu, and prepare next for filling. */
 static void netflow_export_pdu_v9(void)
 {
-	struct timeval tv;
+	struct __kernel_old_timeval tv;
 	int pdusize;
 
 	if (pdu_data_used <= pdu.v9.data)
@@ -2732,7 +2732,7 @@ static void netflow_export_pdu_v9(void)
 
 static void netflow_export_pdu_ipfix(void)
 {
-	struct timeval tv;
+	struct __kernel_old_timeval tv;
 	int pdusize;
 
 	if (pdu_data_used <= pdu.ipfix.data)
@@ -3637,7 +3637,7 @@ static inline unsigned long timeout_rate_j(void)
 	static unsigned long t_rate_j = 0;
 
 	if (unlikely(timeout_rate != t_rate)) {
-		struct timeval tv = { .tv_sec = timeout_rate * 60, .tv_usec = 0 };
+		struct __kernel_old_timeval tv = { .tv_sec = timeout_rate * 60, .tv_usec = 0 };
 
 		t_rate = timeout_rate;
 		t_rate_j = timeval_to_jiffies(&tv);
